@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.formats import number_format
 from .models import eventos, inscripciones
 # Register your models here.
 
@@ -11,11 +12,20 @@ class InscipcionesInLine(admin.TabularInline):
 
 @admin.register(eventos)
 class EventosAdmin(admin.ModelAdmin):
-    list_display = ('nombre','lugar','descripcion','valor','cupos','activo','cupos_disponibles')
+    list_display = ('nombre','lugar','descripcion','valor_en_pesos','cupos','activo','cupos_disponibles')
     list_filter = ('activo', 'lugar')
     search_fields = ('nombre','lugar')
     list_editable = ('activo',)
     inlines = [InscipcionesInLine]
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        form.base_fields['valor'].label = 'Valor (CLP)'
+        return form
+
+    @admin.display(description='Valor (CLP)', ordering='valor')
+    def valor_en_pesos(self, obj):
+        return f"$ {number_format(obj.valor, use_l10n=True, force_grouping=True)}"
 
 
 @admin.display(description='Disponibles')
